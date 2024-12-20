@@ -1,12 +1,13 @@
 ﻿using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
+using LanguageExt;
 using System.Data;
 
 namespace ClinicalTrialsApi.Infrastructure.Repositories
 {
     public class ClinicalTrialMetadataRepository(ClinicalTrialsContext dbContext) : IClinicalTrialMetadataRepository
     {
-        public Task<ClinicalTrialMetadata> Get(string trialId)
+        public Task<Option<ClinicalTrialMetadata>> Get(string trialId)
         {
             throw new NotImplementedException();
         }

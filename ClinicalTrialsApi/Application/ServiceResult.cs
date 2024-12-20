@@ -1,18 +1,13 @@
 ﻿using LanguageExt;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
 namespace ClinicalTrialsApi.Application
 {
-    public class Error
-    {
-        public string Message { get; set; } = null!;
-        public HttpStatusCode HttpStatusCode { get; set; }
-    }
-
     public class ServiceResult<TEntity>
     {
         public Option<TEntity> Entity { get; private set; }
-        public Option<Error> Error { get; private set; }
+        public Option<ProblemDetails> Error { get; private set; }
         public bool IsError { get; private set; }
 
         public static ServiceResult<TEntity> FromEntity(TEntity entity)
@@ -20,17 +15,17 @@ namespace ClinicalTrialsApi.Application
             return new ServiceResult<TEntity>
             {
                 Entity = Option<TEntity>.Some(entity),
-                Error = Option<Error>.None,
+                Error = Option<ProblemDetails>.None,
                 IsError = false
             };
         }
 
-        public static ServiceResult<TEntity> FromError(Error error)
+        public static ServiceResult<TEntity> FromError(ProblemDetails error)
         {
             return new ServiceResult<TEntity>
             {
                 Entity = Option<TEntity>.None,
-                Error = Option<Error>.Some(error),
+                Error = Option<ProblemDetails>.Some(error),
                 IsError = true
             };
         }
