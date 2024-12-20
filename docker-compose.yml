@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  clinicaltrialsapi:
+    image: ${DOCKER_REGISTRY-}clinicaltrialsapi
+    build:
+      context: .
+      dockerfile: ClinicalTrialsApi/Dockerfile
