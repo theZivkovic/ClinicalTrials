@@ -1,5 +1,9 @@
 using ClinicalTrialsApi;
+using ClinicalTrialsApi.Application;
+using ClinicalTrialsApi.Application.Services;
+using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
+using ClinicalTrialsApi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Text.Json;
@@ -77,6 +81,11 @@ builder.Services.AddDbContextPool<ClinicalTrialsContext>(opt =>
             context.SaveChanges();
         }
     }));
+
+builder.Services.AddScoped<IClinicalTrialMetadataRepository, ClinicalTrialMetadataRepository>();
+builder.Services.AddScoped<IValidationSchemaRepository, ValidationSchemaRepository>();
+builder.Services.AddScoped<IClinicalTrialMetadataService, ClinicalTrialMetadataService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 

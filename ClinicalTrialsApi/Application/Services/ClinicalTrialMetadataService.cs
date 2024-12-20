@@ -1,7 +1,9 @@
 ﻿using ClinicalTrialsApi.Application.Factories;
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
+using Json.Schema;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using System.Text.Json;
 
 namespace ClinicalTrialsApi.Application.Services
@@ -13,7 +15,8 @@ namespace ClinicalTrialsApi.Application.Services
 
     public class ClinicalTrialMetadataService(
         IValidationSchemaRepository validationSchemaRepository,
-        IClinicalTrialMetadataRepository clinicalTrialMetadataRepository
+        IClinicalTrialMetadataRepository clinicalTrialMetadataRepository,
+        IUnitOfWork unitOfWork
     ) : IClinicalTrialMetadataService
     {
         public async Task<ServiceResult<ClinicalTrialMetadata>> Create(JsonElement request)
@@ -25,9 +28,24 @@ namespace ClinicalTrialsApi.Application.Services
                 return ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"ValidationSchema for type: {ValidationSchemaType.ClinicalTrial} not found");
             }
 
-            // validate schema and create metadata object
+            var schema = JsonSchema.FromText(validationSchema.ValueUnsafe().Schema.ToString());
+            var validationResult = schema.Evaluate(request);
 
-            var result = await clinicalTrialMetadataRepository.Update(new ClinicalTrialMetadata());
+            // validate schema and create metadata object
+            if (!validationResult.IsValid)
+            {
+                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Validation error");
+            }
+
+
+            var result = await unitOfWork.Execute<ClinicalTrialMetadata>(() =>
+            {
+                var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(request, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return clinicalTrialMetadataRepository.Update(clinicalTrialMetadata);
+            });
 
             return ServiceResult<ClinicalTrialMetadata>.FromEntity(result);
         }

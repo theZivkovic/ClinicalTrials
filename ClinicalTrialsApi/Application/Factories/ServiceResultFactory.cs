@@ -15,5 +15,16 @@ namespace ClinicalTrialsApi.Application.Factories
                 Title = "Not Found",
             });   
         }
+
+        public static ServiceResult<T> CreateBadRequest<T>(string message)
+        {
+            return ServiceResult<T>.FromError(new ProblemDetails
+            {
+                Detail = message,
+                Instance = "api",
+                Status = (int)HttpStatusCode.BadRequest,
+                Title = "Not Found",
+            });
+        }
     }
 }

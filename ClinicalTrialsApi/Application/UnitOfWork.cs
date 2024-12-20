@@ -1,19 +1,20 @@
 ﻿namespace ClinicalTrialsApi.Application
 {
-    public interface IUnitOfWork<T>
+    public interface IUnitOfWork
     {
-        public Task Execute(Func<Task> action);
+        public Task<T> Execute<T>(Func<Task<T>> action);
     }
-    public class UnitOfWork<T>(ClinicalTrialsContext dbContext) : IUnitOfWork<T>
+    public class UnitOfWork(ClinicalTrialsContext dbContext) : IUnitOfWork
     {
-        public async Task Execute(Func<Task> action)
+        public async Task<T> Execute<T>(Func<Task<T>> action)
         {
             try
             {
                 using var transaction = dbContext.Database.BeginTransaction();
-                await action();
+                var result = await action();
                 await dbContext.SaveChangesAsync();
                 transaction.Commit();
+                return result;
             }
             finally
             {
