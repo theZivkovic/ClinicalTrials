@@ -6,14 +6,10 @@ namespace ClinicalTrialsApi
     public class ClinicalTrialsContext : DbContext
     {
         public DbSet<ClinicalTrialMetadata> ClinicalTrialMetadatas { get; set; }
+        public DbSet<ValidationSchema> ValidationSchemas { get; set; }
 
         public ClinicalTrialsContext(DbContextOptions<ClinicalTrialsContext> options)
        : base(options)
         { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-
-        }
     }
 }
