@@ -15,7 +15,7 @@ namespace ClinicalTrialsApi.Controllers
     public class ClinicalTrialMetadataController(
         IClinicalTrialMetadataService clinicalTrialMetadataService) : ControllerBase
     {
-        // GET: api/<ClinicalTrialMetadataController>
+        // GET: api/<ClinicalTrialMetadata>
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] string[] trialId, [FromQuery] ClinicalTrialStatus[] status)
         {
@@ -24,6 +24,7 @@ namespace ClinicalTrialsApi.Controllers
                 TrialIds = trialId,
                 Statuses = status
             };
+
             var pagination = Pagination.ParseFromRequest(Request.Headers);
 
             return await pagination.MatchAsync(
@@ -37,14 +38,14 @@ namespace ClinicalTrialsApi.Controllers
 
         }
 
-        // GET api/<ClinicalTrialMetadataController>/trial123
+        // GET api/<ClinicalTrialMetadata>/trial123
         [HttpGet("{trialId}")]
         public async Task<IActionResult> Get(string trialId)
         {
             return (await clinicalTrialMetadataService.GetATrial(trialId)).ToResponse();
         }
 
-        // PUT api/<ClinicalTrialMetadataController>/5
+        // PUT api/<ClinicalTrialMetadata>
         [HttpPut]
         public async Task<IActionResult> Put([FromBody] JsonElement value)
         {
