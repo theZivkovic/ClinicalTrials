@@ -1,4 +1,5 @@
 ﻿using ClinicalTrialsApi.Application.Factories;
+using ClinicalTrialsApi.Core.DTOs;
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using Json.Schema;
@@ -11,6 +12,7 @@ namespace ClinicalTrialsApi.Application.Services
     {
         Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(JsonElement request);
         Task<ServiceResult<ClinicalTrialMetadata>> GetATrial(string trialId);
+        Task<ServiceResult<IEnumerable<ClinicalTrialMetadata>>> GetAllTrials(ClinicalTrialMetadataFilter filter, Pagination pagination);
     }
 
     public class ClinicalTrialMetadataService(
@@ -48,6 +50,12 @@ namespace ClinicalTrialsApi.Application.Services
                     : clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
             });
 
+        }
+
+        public async Task<ServiceResult<IEnumerable<ClinicalTrialMetadata>>> GetAllTrials(ClinicalTrialMetadataFilter filter, Pagination pagination)
+        {
+            return ServiceResult<IEnumerable<ClinicalTrialMetadata>>
+                .FromEntity(await clinicalTrialMetadataRepository.GetAll(filter, pagination));
         }
 
         public async Task<ServiceResult<ClinicalTrialMetadata>> GetATrial(string trialId)

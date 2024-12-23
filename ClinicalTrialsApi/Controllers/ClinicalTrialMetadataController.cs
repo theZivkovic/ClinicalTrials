@@ -1,5 +1,8 @@
 ﻿using ClinicalTrialsApi.Application.Extensions;
+using ClinicalTrialsApi.Application.Factories;
 using ClinicalTrialsApi.Application.Services;
+using ClinicalTrialsApi.Core.DTOs;
+using ClinicalTrialsApi.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -14,9 +17,24 @@ namespace ClinicalTrialsApi.Controllers
     {
         // GET: api/<ClinicalTrialMetadataController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IActionResult> Get([FromQuery] string[] trialId, [FromQuery] ClinicalTrialStatus[] status)
         {
-            return new string[] { "value1", "value2" };
+            var filter = new ClinicalTrialMetadataFilter()
+            {
+                TrialIds = trialId,
+                Statuses = status
+            };
+            var pagination = Pagination.ParseFromRequest(Request.Headers);
+
+            return await pagination.MatchAsync(
+                async p => {
+                    Response.Headers.Append("x-pagination-limit", p.Limit.ToString());
+                    Response.Headers.Append("x-pagination-offset", p.Offset.ToString());
+                    return (await clinicalTrialMetadataService.GetAllTrials(filter, p)).ToResponse();
+                },
+                () => Task.FromResult(ServiceResultFactory
+                    .CreateBadRequest<IEnumerable<ClinicalTrialMetadata>>("Pagination is not valid. Specify it using headers: x-pagination-offset (any whole number) and x-pagination-limit (whole number from 0 to 50)").ToResponse()));
+
         }
 
         // GET api/<ClinicalTrialMetadataController>/trial123

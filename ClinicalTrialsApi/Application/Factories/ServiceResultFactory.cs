@@ -34,7 +34,7 @@ namespace ClinicalTrialsApi.Application.Factories
                 Detail = message,
                 Instance = "api",
                 Status = (int)HttpStatusCode.BadRequest,
-                Title = "Not Found",
+                Title = "Bad Request",
             });
         }
 

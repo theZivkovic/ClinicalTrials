@@ -1,4 +1,5 @@
-﻿using ClinicalTrialsApi.Core.Interfaces;
+﻿using ClinicalTrialsApi.Core.DTOs;
+using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +17,26 @@ namespace ClinicalTrialsApi.Infrastructure.Repositories
                 : Option<ClinicalTrialMetadata>.Some(result);
         }
 
-        public Task<IEnumerable<ClinicalTrialMetadata>> GetAll(ClinicalTrialsFilter filter)
+        public async Task<IEnumerable<ClinicalTrialMetadata>> GetAll(ClinicalTrialMetadataFilter filter, Pagination pagination)
         {
-            throw new NotImplementedException();
+            var filteredTrials = dbContext.ClinicalTrialMetadatas.AsQueryable();
+
+            if (filter.TrialIds.Any())
+            {
+                filteredTrials = filteredTrials.Where(trial => filter.TrialIds.Any(trialId => trialId == trial.TrialId));
+            }
+
+            if (filter.Statuses.Any())
+            {
+                filteredTrials = filteredTrials.Where(trial => filter.Statuses.Any(status => status == trial.Status));
+            }
+
+            return await filteredTrials
+                .OrderByDescending(x => x.StartDate)
+                .Skip(pagination.Offset)
+                .Take(pagination.Limit)
+                .ToListAsync();
+
         }
 
         public async Task<ClinicalTrialMetadata> CreateOrUpdate(ClinicalTrialMetadata request)
