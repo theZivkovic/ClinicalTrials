@@ -1,12 +1,15 @@
-﻿namespace ClinicalTrialsApi.Application
+﻿using ClinicalTrialsApi.Application.Factories;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ClinicalTrialsApi.Application
 {
     public interface IUnitOfWork
     {
-        public Task<T> Execute<T>(Func<Task<T>> action);
+        public Task<ServiceResult<T>> Execute<T>(Func<Task<T>> action);
     }
-    public class UnitOfWork(ClinicalTrialsContext dbContext) : IUnitOfWork
+    public class UnitOfWork(ClinicalTrialsContext dbContext, ILogger<UnitOfWork> logger) : IUnitOfWork
     {
-        public async Task<T> Execute<T>(Func<Task<T>> action)
+        public async Task<ServiceResult<T>> Execute<T>(Func<Task<T>> action)
         {
             try
             {
@@ -14,13 +17,13 @@
                 var result = await action();
                 await dbContext.SaveChangesAsync();
                 transaction.Commit();
-                return result;
+                return ServiceResult<T>.FromEntity(result);
             }
-            finally
+            catch(Exception e)
             {
-                
+                logger.LogError("UnitOfWork unhandled exception: {e}", e);
+                return ServiceResultFactory.CreateInternalServerError<T>(e.Message);
             }
-
         }
     }
 }

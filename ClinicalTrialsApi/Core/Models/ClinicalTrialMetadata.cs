@@ -1,11 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ClinicalTrialsApi.Core.Models
 {
+    [JsonConverter(typeof(JsonStringEnumConverter<ClinicalTrialStatus>))]
     public enum ClinicalTrialStatus
     {
+        [EnumMember(Value = "Not Started")]
         NotStarted,
+        [EnumMember(Value = "Ongoing")]
         Ongoing,
+        [EnumMember(Value = "Completed")]
         Completed
     }
 

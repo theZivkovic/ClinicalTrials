@@ -6,7 +6,7 @@ namespace ClinicalTrialsApi.Core.Interfaces
 {
     public interface IClinicalTrialMetadataRepository
     {
-        public Task<ClinicalTrialMetadata> Update(ClinicalTrialMetadata request);
+        public Task<ClinicalTrialMetadata> CreateOrUpdate(ClinicalTrialMetadata request);
         public Task<Option<ClinicalTrialMetadata>> Get(string trialId);
         public Task<IEnumerable<ClinicalTrialMetadata>> GetAll(ClinicalTrialsFilter filter);
     }

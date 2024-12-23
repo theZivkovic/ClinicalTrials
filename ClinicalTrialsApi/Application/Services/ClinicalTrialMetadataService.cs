@@ -34,20 +34,21 @@ namespace ClinicalTrialsApi.Application.Services
             // validate schema and create metadata object
             if (!validationResult.IsValid)
             {
-                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Validation error");
+                return ServiceResultFactory.CreateValiationErrors<ClinicalTrialMetadata>(validationResult);
             }
 
-
-            var result = await unitOfWork.Execute<ClinicalTrialMetadata>(() =>
+            return await unitOfWork.Execute<ClinicalTrialMetadata>(() =>
             {
                 var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(request, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return clinicalTrialMetadataRepository.Update(clinicalTrialMetadata);
+
+                return clinicalTrialMetadata == null
+                    ? throw new JsonException("Problem deserializing the result")
+                    : clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
             });
 
-            return ServiceResult<ClinicalTrialMetadata>.FromEntity(result);
         }
     }
 }

@@ -17,9 +17,17 @@ namespace ClinicalTrialsApi.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<ClinicalTrialMetadata> Update(ClinicalTrialMetadata request)
+        public Task<ClinicalTrialMetadata> CreateOrUpdate(ClinicalTrialMetadata request)
         {
-            dbContext.Update(request);
+            var existingMetadata = dbContext.ClinicalTrialMetadatas.FirstOrDefault(x => x.TrialId == request.TrialId);
+            if (existingMetadata == null)
+            {
+                dbContext.Add(request);
+            }
+            else
+            {
+                dbContext.Entry(existingMetadata).CurrentValues.SetValues(request);
+            }
             return Task.FromResult(request);
         }
 
