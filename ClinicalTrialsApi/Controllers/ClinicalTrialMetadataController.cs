@@ -36,7 +36,7 @@ namespace ClinicalTrialsApi.Controllers
         [HttpPut]
         public async Task<IActionResult> Put([FromBody] JsonElement value)
         {
-            return (await clinicalTrialMetadataService.Create(value)).ToResponse();
+            return (await clinicalTrialMetadataService.CreateOrUpdateATrial(value)).ToResponse();
         }
 
         // DELETE api/<ClinicalTrialMetadataController>/5

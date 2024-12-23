@@ -2,7 +2,6 @@
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using Json.Schema;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using System.Text.Json;
 
@@ -10,7 +9,7 @@ namespace ClinicalTrialsApi.Application.Services
 {
     public interface IClinicalTrialMetadataService
     {
-        Task<ServiceResult<ClinicalTrialMetadata>> Create(JsonElement request);
+        Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(JsonElement request);
     }
 
     public class ClinicalTrialMetadataService(
@@ -19,7 +18,7 @@ namespace ClinicalTrialsApi.Application.Services
         IUnitOfWork unitOfWork
     ) : IClinicalTrialMetadataService
     {
-        public async Task<ServiceResult<ClinicalTrialMetadata>> Create(JsonElement request)
+        public async Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(JsonElement request)
         {
             var validationSchema = await validationSchemaRepository.Get(ValidationSchemaType.ClinicalTrial);
 
@@ -31,13 +30,12 @@ namespace ClinicalTrialsApi.Application.Services
             var schema = JsonSchema.FromText(validationSchema.ValueUnsafe().Schema.ToString());
             var validationResult = schema.Evaluate(request);
 
-            // validate schema and create metadata object
             if (!validationResult.IsValid)
             {
                 return ServiceResultFactory.CreateValiationErrors<ClinicalTrialMetadata>(validationResult);
             }
 
-            return await unitOfWork.Execute<ClinicalTrialMetadata>(() =>
+            return await unitOfWork.Execute(() =>
             {
                 var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(request, new JsonSerializerOptions
                 {
