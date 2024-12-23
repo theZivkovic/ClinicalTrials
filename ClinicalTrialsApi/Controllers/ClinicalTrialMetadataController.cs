@@ -19,17 +19,11 @@ namespace ClinicalTrialsApi.Controllers
             return new string[] { "value1", "value2" };
         }
 
-        // GET api/<ClinicalTrialMetadataController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // GET api/<ClinicalTrialMetadataController>/trial123
+        [HttpGet("{trialId}")]
+        public async Task<IActionResult> Get(string trialId)
         {
-            return "value";
-        }
-
-        // POST api/<ClinicalTrialMetadataController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
+            return (await clinicalTrialMetadataService.GetATrial(trialId)).ToResponse();
         }
 
         // PUT api/<ClinicalTrialMetadataController>/5
@@ -37,12 +31,6 @@ namespace ClinicalTrialsApi.Controllers
         public async Task<IActionResult> Put([FromBody] JsonElement value)
         {
             return (await clinicalTrialMetadataService.CreateOrUpdateATrial(value)).ToResponse();
-        }
-
-        // DELETE api/<ClinicalTrialMetadataController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
         }
     }
 }

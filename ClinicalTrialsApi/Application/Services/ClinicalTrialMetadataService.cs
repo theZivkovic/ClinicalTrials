@@ -10,6 +10,7 @@ namespace ClinicalTrialsApi.Application.Services
     public interface IClinicalTrialMetadataService
     {
         Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(JsonElement request);
+        Task<ServiceResult<ClinicalTrialMetadata>> GetATrial(string trialId);
     }
 
     public class ClinicalTrialMetadataService(
@@ -47,6 +48,15 @@ namespace ClinicalTrialsApi.Application.Services
                     : clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
             });
 
+        }
+
+        public async Task<ServiceResult<ClinicalTrialMetadata>> GetATrial(string trialId)
+        {
+            var result = await clinicalTrialMetadataRepository.Get(trialId);
+
+            return result.Match(
+               ServiceResult<ClinicalTrialMetadata>.FromEntity,
+               () => ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"Trial with id: {trialId} not found"));
         }
     }
 }

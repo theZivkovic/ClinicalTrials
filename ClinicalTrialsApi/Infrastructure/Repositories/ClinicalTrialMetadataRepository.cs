@@ -1,15 +1,19 @@
 ﻿using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace ClinicalTrialsApi.Infrastructure.Repositories
 {
     public class ClinicalTrialMetadataRepository(ClinicalTrialsContext dbContext) : IClinicalTrialMetadataRepository
     {
-        public Task<Option<ClinicalTrialMetadata>> Get(string trialId)
+        public async Task<Option<ClinicalTrialMetadata>> Get(string trialId)
         {
-            throw new NotImplementedException();
+            var result = await dbContext.ClinicalTrialMetadatas.FirstOrDefaultAsync(x => x.TrialId == trialId);
+            return result == null
+                ? Option<ClinicalTrialMetadata>.None
+                : Option<ClinicalTrialMetadata>.Some(result);
         }
 
         public Task<IEnumerable<ClinicalTrialMetadata>> GetAll(ClinicalTrialsFilter filter)
@@ -17,9 +21,9 @@ namespace ClinicalTrialsApi.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<ClinicalTrialMetadata> CreateOrUpdate(ClinicalTrialMetadata request)
+        public async Task<ClinicalTrialMetadata> CreateOrUpdate(ClinicalTrialMetadata request)
         {
-            var existingMetadata = dbContext.ClinicalTrialMetadatas.FirstOrDefault(x => x.TrialId == request.TrialId);
+            var existingMetadata = await dbContext.ClinicalTrialMetadatas.FirstOrDefaultAsync(x => x.TrialId == request.TrialId);
             if (existingMetadata == null)
             {
                 dbContext.Add(request);
@@ -28,7 +32,7 @@ namespace ClinicalTrialsApi.Infrastructure.Repositories
             {
                 dbContext.Entry(existingMetadata).CurrentValues.SetValues(request);
             }
-            return Task.FromResult(request);
+            return request;
         }
 
        

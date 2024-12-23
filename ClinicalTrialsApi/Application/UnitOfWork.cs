@@ -19,7 +19,7 @@ namespace ClinicalTrialsApi.Application
                 transaction.Commit();
                 return ServiceResult<T>.FromEntity(result);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 logger.LogError("UnitOfWork unhandled exception: {e}", e);
                 return ServiceResultFactory.CreateInternalServerError<T>(e.Message);
