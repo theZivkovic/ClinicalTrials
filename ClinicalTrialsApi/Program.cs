@@ -5,9 +5,8 @@ using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using ClinicalTrialsApi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
-using System;
+using Serilog;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +86,9 @@ builder.Services.AddScoped<IValidationSchemaRepository, ValidationSchemaReposito
 builder.Services.AddScoped<IClinicalTrialMetadataService, ClinicalTrialMetadataService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -95,6 +97,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
