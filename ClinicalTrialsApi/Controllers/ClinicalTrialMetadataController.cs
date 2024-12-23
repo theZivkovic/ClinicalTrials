@@ -45,11 +45,10 @@ namespace ClinicalTrialsApi.Controllers
             return (await clinicalTrialMetadataService.GetATrial(trialId)).ToResponse();
         }
 
-        // PUT api/<ClinicalTrialMetadata>
         [HttpPut]
-        public async Task<IActionResult> Put([FromBody] JsonElement value)
+        public async Task<IActionResult> Put(IFormFile file)
         {
-            return (await clinicalTrialMetadataService.CreateOrUpdateATrial(value)).ToResponse();
+            return (await clinicalTrialMetadataService.CreateOrUpdateATrial(file)).ToResponse();
         }
     }
 }

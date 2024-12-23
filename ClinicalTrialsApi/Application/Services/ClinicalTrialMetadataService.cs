@@ -10,7 +10,7 @@ namespace ClinicalTrialsApi.Application.Services
 {
     public interface IClinicalTrialMetadataService
     {
-        Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(JsonElement request);
+        Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(IFormFile file);
         Task<ServiceResult<ClinicalTrialMetadata>> GetATrial(string trialId);
         Task<ServiceResult<IEnumerable<ClinicalTrialMetadata>>> GetAllTrials(ClinicalTrialMetadataFilter filter, Pagination pagination);
     }
@@ -21,8 +21,25 @@ namespace ClinicalTrialsApi.Application.Services
         IUnitOfWork unitOfWork
     ) : IClinicalTrialMetadataService
     {
-        public async Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(JsonElement request)
+        public async Task<ServiceResult<ClinicalTrialMetadata>> CreateOrUpdateATrial(IFormFile file)
         {
+            string extension = Path.GetExtension(file.FileName);
+            
+            if (extension != ".json")
+            {
+                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Only *.json files are allowed");
+            }
+
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Max file size is 5MB");
+            }
+
+            using var reader = new StreamReader(file.OpenReadStream());
+            var fileContent = await reader.ReadToEndAsync();
+
+            var inputJson = JsonDocument.Parse(fileContent).RootElement;
+
             var validationSchema = await validationSchemaRepository.Get(ValidationSchemaType.ClinicalTrial);
 
             if (validationSchema.IsNone)
@@ -31,7 +48,7 @@ namespace ClinicalTrialsApi.Application.Services
             }
 
             var schema = JsonSchema.FromText(validationSchema.ValueUnsafe().Schema.ToString());
-            var validationResult = schema.Evaluate(request);
+            var validationResult = schema.Evaluate(inputJson);
 
             if (!validationResult.IsValid)
             {
@@ -40,7 +57,7 @@ namespace ClinicalTrialsApi.Application.Services
 
             return await unitOfWork.Execute(() =>
             {
-                var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(request, new JsonSerializerOptions
+                var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
