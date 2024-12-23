@@ -19,8 +19,10 @@ namespace ClinicalTrialsApi.Core.Models
     {
         [Required]
         [Key]
+        [MaxLength(50)]
         public string TrialId { get; set; } = null!;
         [Required]
+        [MaxLength(255)]
         public string Title { get; set; } = null!;
         [Required]
         public DateTime StartDate { get; set; }

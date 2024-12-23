@@ -30,7 +30,7 @@ namespace ClinicalTrialsApi.Application.Services
                 return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Only *.json files are allowed");
             }
 
-            if (file.Length > 5 * 1024 * 1024)
+            if (file.Length > 97+255+50)
             {
                 return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Max file size is 5MB");
             }
