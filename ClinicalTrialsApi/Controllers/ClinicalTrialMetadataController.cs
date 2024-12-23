@@ -1,4 +1,5 @@
-﻿using ClinicalTrialsApi.Application.Services;
+﻿using ClinicalTrialsApi.Application.Extensions;
+using ClinicalTrialsApi.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -35,15 +36,7 @@ namespace ClinicalTrialsApi.Controllers
         [HttpPut]
         public async Task<IActionResult> Put([FromBody] JsonElement value)
         {
-            var result = await clinicalTrialMetadataService.Create(value);
-            if (result.IsError)
-            {
-                return BadRequest(result.Error);
-            }
-            else
-            {
-                return Ok(result.Entity);
-            }
+            return (await clinicalTrialMetadataService.Create(value)).ToResponse();
         }
 
         // DELETE api/<ClinicalTrialMetadataController>/5

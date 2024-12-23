@@ -45,8 +45,8 @@ namespace ClinicalTrialsApi.Application.Factories
                 Detail = "Validation error",
                 Instance = "api",
                 Status = (int)HttpStatusCode.BadRequest,
-                Title = "Not Found",
-                Extensions = evaluationResults.Errors!.ToDictionary(x => x.Key, x => (object?)x.Value)
+                Title = "Validation error",
+                //Extensions = evaluationResults.Errors!.ToDictionary(x => x.Key, x => (object?)x.Value)
             });
         }
     }
