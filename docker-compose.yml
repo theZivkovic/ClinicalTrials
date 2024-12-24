@@ -16,6 +16,15 @@ services:
       - db:/var/lib/postgresql/data
     ports:
       - "54320:5432"
+  migrations:
+    image: ${DOCKER_REGISTRY-}migrations
+    build:
+      context: .
+      dockerfile: Migrations/Dockerfile
+    depends_on:
+      clinicaltrialsapi:
+        condition: service_started
+
 volumes:
   db:
     driver: local

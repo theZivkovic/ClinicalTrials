@@ -1,33 +1,82 @@
 using ClinicalTrialsApi;
+using ClinicalTrialsApi.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
-var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
+var builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.AddDbContextPool<ClinicalTrialsContext>(opt =>
+    opt.UseNpgsql(
+        builder.Configuration.GetConnectionString("ClinicalTrialsContext"),
+        o => o
+            .SetPostgresVersion(17, 0)
+            .MapEnum<ClinicalTrialStatus>("clinical_trials_status"))
+    .UseSeeding((context, _) =>
     {
-        services.AddTransient<MigrationService>();
-        services.AddDbContextPool<ClinicalTrialsContext>(opt =>
-            opt.UseNpgsql("Host=clinicaltrialsdb;Database=postgres;Username=postgres;Password=postgres"));
-    })
-    .Build();
+        var clinicalTrialSchema = @"{
+            ""$schema"": ""http://json-schema.org/draft-07/schema#"",
+            ""title"": ""ClinicalTrialMetadata"",
+            ""type"": ""object"",
+            ""properties"": {
+                ""trialId"": {
+                    ""type"": ""string""
+                },
+                ""title"": {
+                    ""type"": ""string""
+                },
+                ""startDate"": {
+                    ""type"": ""string"",
+                    ""format"": ""date""
+                },
+                ""endDate"": {
+                    ""type"": ""string"",
+                    ""format"": ""date""
+                },
+                ""participants"": {
+                    ""type"": ""integer"",
+                    ""minimum"": 1
+                },
+                ""status"": {
+                    ""type"": ""string"",
+                    ""enum"": [
+                        ""Not Started"",
+                        ""Ongoing"",
+                        ""Completed""
+                    ]
+                }
+            },
+            ""required"": [
+                ""trialId"",
+                ""title"",
+                ""startDate"",
+                ""status""
+            ],
+            ""additionalProperties"": false
+            }";
 
-var my = host.Services.GetRequiredService<MigrationService>();
-await my.ExecuteAsync();
+        var existingSchema = context
+            .Set<ValidationSchema>()
+            .AsNoTracking()
+            .FirstOrDefault(x => x.Type == ValidationSchemaType.ClinicalTrial);
 
-class MigrationService
-{
-    private readonly ILogger<MigrationService> _logger;
-
-    public MigrationService(ILogger<MigrationService> logger)
-    {
-        _logger = logger;
-    }
-
-    public async Task ExecuteAsync(CancellationToken stoppingToken = default)
-    {
-        using (var context = (ClinicalTrialsContext)host.Services.GetService(typeof(ClinicalTrialsContext)))
+        if (existingSchema == null)
         {
-            context.Database.Migrate();
+            context.Set<ValidationSchema>().Add(new ValidationSchema
+            {
+                Type = ValidationSchemaType.ClinicalTrial,
+                Schema = JsonDocument.Parse(clinicalTrialSchema).RootElement
+            });
+            context.SaveChanges();
         }
-        Console.WriteLine("Done");
-    }
+    }));
+
+var app = builder.Build();
+
+using (var Scope = app.Services.CreateScope())
+{
+    var context = Scope.ServiceProvider.GetRequiredService<ClinicalTrialsContext>();
+    context.Database.Migrate();
 }
+
+app.Run();
+
