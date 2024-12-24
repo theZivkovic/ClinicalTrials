@@ -1,4 +1,5 @@
-﻿using ClinicalTrialsApi.Application.Factories;
+﻿using ClinicalTrialsApi.Application.Extensions;
+using ClinicalTrialsApi.Application.Factories;
 using ClinicalTrialsApi.Core.Converters;
 using ClinicalTrialsApi.Core.DTOs;
 using ClinicalTrialsApi.Core.Interfaces;
@@ -38,12 +39,9 @@ namespace ClinicalTrialsApi.Application.Services
                     ProblemDetailsFactory.CreateBadRequest("Max file size is 402 bytes"));
             }
 
-            using var reader = new StreamReader(file.OpenReadStream());
-            var fileContent = await reader.ReadToEndAsync();
-
-            var inputJson = JsonDocument.Parse(fileContent).RootElement;
-
             var validationSchema = await validationSchemaRepository.Get(ValidationSchemaType.ClinicalTrial);
+
+            var inputJson = await file.ToJson();
 
             return await validationSchema.MatchAsync(async validationSchema =>
             {
@@ -63,19 +61,16 @@ namespace ClinicalTrialsApi.Application.Services
 
                 return await unitOfWork.Execute(() =>
                 {
-                    var options = new JsonSerializerOptions
+                    JsonSerializerOptions options = new()
                     {
                         PropertyNameCaseInsensitive = true
                     };
+
                     options.Converters.Add(new JsonEnumMemberStringEnumConverter());
 
-                    var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, options);
-
-                    if (clinicalTrialMetadata == null)
-                    {
-                        throw new JsonException("Problem deserializing the result");
-                    }
-
+                    var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, options) 
+                        ?? throw new JsonException("Problem deserializing the result");
+                    
                     clinicalTrialMetadata.AdjustEndDate();
                     return clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
                 });
