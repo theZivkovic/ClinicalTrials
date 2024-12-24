@@ -4,50 +4,50 @@ using System.Net;
 
 namespace ClinicalTrialsApi.Application.Factories
 {
-    public static class ServiceResultFactory
+    public static class ProblemDetailsFactory
     {
-        public static ServiceResult<T> CreateInternalServerError<T>(string message)
+        public static ProblemDetails CreateInternalServerError(string message)
         {
-            return ServiceResult<T>.FromError(new ProblemDetails
+            return new ProblemDetails
             {
                 Detail = message,
                 Instance = "api",
                 Status = (int)HttpStatusCode.InternalServerError,
                 Title = "Internal Server Error",
-            });
+            };
         }
-        public static ServiceResult<T> CreateNotFound<T>(string message)
+        public static ProblemDetails CreateNotFound(string message)
         {
-            return ServiceResult<T>.FromError(new ProblemDetails
+            return new ProblemDetails
             {
                 Detail = message,
                 Instance = "api",
                 Status = (int)HttpStatusCode.NotFound,
                 Title = "Not Found",
-            });   
+            };   
         }
 
-        public static ServiceResult<T> CreateBadRequest<T>(string message)
+        public static ProblemDetails CreateBadRequest(string message)
         {
-            return ServiceResult<T>.FromError(new ProblemDetails
+            return new ProblemDetails
             {
                 Detail = message,
                 Instance = "api",
                 Status = (int)HttpStatusCode.BadRequest,
                 Title = "Bad Request",
-            });
+            };
         }
 
-        public static ServiceResult<T> CreateValiationErrors<T>(EvaluationResults evaluationResults)
+        public static ProblemDetails CreateValidationErrors(EvaluationResults evaluationResults)
         {
-            return ServiceResult<T>.FromError(new ProblemDetails
+            return new ProblemDetails
             {
                 Detail = "Validation Error",
                 Instance = "api",
                 Status = (int)HttpStatusCode.BadRequest,
                 Title = "Validation Error",
                 Extensions = CreateValidationErrorDetails(evaluationResults)
-            });
+            };
         }
 
         private static Dictionary<string, object?> CreateValidationErrorDetails(EvaluationResults results)

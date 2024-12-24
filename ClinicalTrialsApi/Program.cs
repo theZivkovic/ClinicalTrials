@@ -1,5 +1,6 @@
 using ClinicalTrialsApi;
 using ClinicalTrialsApi.Application.Services;
+using ClinicalTrialsApi.Core.Exceptions.Handlers;
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using ClinicalTrialsApi.Infrastructure.Repositories;
@@ -21,6 +22,9 @@ builder.Services.AddDbContextPool<ClinicalTrialsContext>(opt =>
         o => o
             .SetPostgresVersion(17, 0)
             .MapEnum<ClinicalTrialStatus>("clinical_trials_status")));
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<IClinicalTrialMetadataRepository, ClinicalTrialMetadataRepository>();
 builder.Services.AddScoped<IValidationSchemaRepository, ValidationSchemaRepository>();
@@ -46,5 +50,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseExceptionHandler();
 
 app.Run();

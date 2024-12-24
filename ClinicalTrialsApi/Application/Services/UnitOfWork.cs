@@ -22,7 +22,8 @@ namespace ClinicalTrialsApi.Application.Services
             catch (Exception e)
             {
                 logger.LogError("UnitOfWork unhandled exception: {e}", e);
-                return ServiceResultFactory.CreateInternalServerError<T>(e.Message);
+                return ServiceResult<T>.FromError(
+                    Application.Factories.ProblemDetailsFactory.CreateInternalServerError(e.Message));
             }
         }
     }

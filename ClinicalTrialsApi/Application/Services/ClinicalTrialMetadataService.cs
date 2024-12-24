@@ -27,12 +27,14 @@ namespace ClinicalTrialsApi.Application.Services
             
             if (extension != ".json")
             {
-                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Only *.json files are allowed");
+                return ServiceResult<ClinicalTrialMetadata>.FromError(
+                    ProblemDetailsFactory.CreateBadRequest("Only *.json files are allowed"));
             }
 
             if (file.Length > 97+255+50)
             {
-                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Max file size is 402 bytes");
+                return ServiceResult<ClinicalTrialMetadata>.FromError(
+                    ProblemDetailsFactory.CreateBadRequest("Max file size is 402 bytes"));
             }
 
             using var reader = new StreamReader(file.OpenReadStream());
@@ -54,7 +56,8 @@ namespace ClinicalTrialsApi.Application.Services
 
                 if (!validationResult.IsValid)
                 {
-                    return ServiceResultFactory.CreateValiationErrors<ClinicalTrialMetadata>(validationResult);
+                    return ServiceResult<ClinicalTrialMetadata>.FromError(
+                        ProblemDetailsFactory.CreateValidationErrors(validationResult));
                 }
 
                 return await unitOfWork.Execute(() =>
@@ -72,7 +75,8 @@ namespace ClinicalTrialsApi.Application.Services
                     clinicalTrialMetadata.AdjustEndDate();
                     return clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
                 });
-            }, () => ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"ValidationSchema for type: {ValidationSchemaType.ClinicalTrial} not found"));
+            }, () => ServiceResult<ClinicalTrialMetadata>.FromError(
+                ProblemDetailsFactory.CreateNotFound($"ValidationSchema for type: {ValidationSchemaType.ClinicalTrial} not found")));
         }
 
         public async Task<ServiceResult<IEnumerable<ClinicalTrialMetadata>>> GetAllTrials(ClinicalTrialMetadataFilter filter, Pagination pagination)
@@ -87,7 +91,8 @@ namespace ClinicalTrialsApi.Application.Services
 
             return result.Match(
                ServiceResult<ClinicalTrialMetadata>.FromEntity,
-               () => ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"Trial with id: {trialId} not found"));
+               () => ServiceResult<ClinicalTrialMetadata>.FromError(
+                   ProblemDetailsFactory.CreateNotFound($"Trial with id: {trialId} not found")));
         }
     }
 }
