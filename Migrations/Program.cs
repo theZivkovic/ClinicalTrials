@@ -9,7 +9,7 @@ builder.Services.AddDbContextPool<ClinicalTrialsContext>(opt =>
     opt.UseNpgsql(
         builder.Configuration.GetConnectionString("ClinicalTrialsContext"),
         o => o
-            .SetPostgresVersion(17, 0)
+            .SetPostgresVersion(15, 0)
             .MapEnum<ClinicalTrialStatus>("clinical_trials_status"))
     .UseSeeding((context, _) =>
     {
