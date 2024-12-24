@@ -1,5 +1,6 @@
 ﻿using ClinicalTrialsApi.Application.Factories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClinicalTrialsApi.Application
 {
@@ -7,7 +8,7 @@ namespace ClinicalTrialsApi.Application
     {
         public Task<ServiceResult<T>> Execute<T>(Func<Task<T>> action);
     }
-    public class UnitOfWork(ClinicalTrialsContext dbContext, ILogger<UnitOfWork> logger) : IUnitOfWork
+    public class UnitOfWork(DbContext dbContext, ILogger<UnitOfWork> logger) : IUnitOfWork
     {
         public async Task<ServiceResult<T>> Execute<T>(Func<Task<T>> action)
         {
