@@ -10,7 +10,7 @@ namespace ClinicalTrialsApi.Application.Extensions
         {
             if (!result.IsError)
             {
-                return new OkObjectResult(result.Entity);
+                return new OkObjectResult(result.Entity.ValueUnsafe());
             }
             else
             {

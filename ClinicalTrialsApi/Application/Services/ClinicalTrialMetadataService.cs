@@ -1,4 +1,5 @@
 ﻿using ClinicalTrialsApi.Application.Factories;
+using ClinicalTrialsApi.Core.Converters;
 using ClinicalTrialsApi.Core.DTOs;
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
@@ -62,10 +63,13 @@ namespace ClinicalTrialsApi.Application.Services
 
                 return await unitOfWork.Execute(() =>
                 {
-                    var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, new JsonSerializerOptions
+                    var options = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
-                    });
+                    };
+                    options.Converters.Add(new JsonEnumMemberStringEnumConverter());
+
+                    var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, options);
 
                     if (clinicalTrialMetadata == null)
                     {
