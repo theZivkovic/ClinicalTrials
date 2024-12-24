@@ -1,14 +1,16 @@
 
+using ClinicalTrials.Tests.Helpers;
 using ClinicalTrials.Tests.MockModels;
 using ClinicalTrialsApi.Application;
 using ClinicalTrialsApi.Application.Services;
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;
 using LanguageExt;
-using Microsoft.AspNetCore.Http;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace ClinicalTrials.Tests
 {
@@ -78,29 +80,41 @@ namespace ClinicalTrials.Tests
 
         }
 
-        [Test]
-        public async Task Test1()
+        [TestCase("test.txt")]
+        [TestCase("test.doc")]
+        public async Task CreateOrUpdate_Should_Not_Allow_Non_Json_Files(string filename)
         {
-            var content = @"{
+            var file = FormFileHelper.CreateMockFile(filename, @"{
                 ""trialId"": ""trial-2"",
                 ""title"": ""Second trial"",
                 ""startDate"": ""2016-06-03T23:15:33.008Z"",
                 ""participants"": 1,
                 ""status"":""Completed""
-            }";
-            var fileName = "test.json";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            IFormFile file = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
+            }");
 
             var result = await service.CreateOrUpdateATrial(file);
-            Assert.IsFalse(result.IsError);
-            
+            Assert.IsTrue(result.IsError);
+            Assert.That(result.Error.ValueUnsafe().Status, Is.EqualTo(400));
+            Assert.That(result.Error.ValueUnsafe().Title, Is.EqualTo("Bad Request"));
+            Assert.That(result.Error.ValueUnsafe().Detail, Is.EqualTo("Only *.json files are allowed"));
+        }
+
+        [Test]
+        public async Task CreateOrUpdate_Should_Not_Allow_Too_Large_Files()
+        {
+            var file = FormFileHelper.CreateMockFile("test.json", $@"{{
+                ""trialId"": ""{string.Join("", Enumerable.Range(0, 100))}"",
+                ""title"": ""{string.Join("", Enumerable.Range(0, 300))}"",
+                ""startDate"": ""2016-06-03T23:15:33.008Z"",
+                ""participants"": 1,
+                ""status"":""Completed""
+            }}");
+
+            var result = await service.CreateOrUpdateATrial(file);
+            Assert.IsTrue(result.IsError);
+            Assert.That(result.Error.ValueUnsafe().Status, Is.EqualTo(400));
+            Assert.That(result.Error.ValueUnsafe().Title, Is.EqualTo("Bad Request"));
+            Assert.That(result.Error.ValueUnsafe().Detail, Is.EqualTo("Max file size is 402 bytes"));
         }
     }
 }

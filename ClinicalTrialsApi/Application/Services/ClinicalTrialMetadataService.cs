@@ -32,7 +32,7 @@ namespace ClinicalTrialsApi.Application.Services
 
             if (file.Length > 97+255+50)
             {
-                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Max file size is 5MB");
+                return ServiceResultFactory.CreateBadRequest<ClinicalTrialMetadata>("Max file size is 402 bytes");
             }
 
             using var reader = new StreamReader(file.OpenReadStream());
