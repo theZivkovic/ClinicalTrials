@@ -43,8 +43,7 @@ namespace ClinicalTrialsApi.Infrastructure.Repositories
         {
             var existingMetadata = await dbContext.ClinicalTrialMetadatas.FirstOrDefaultAsync(x => x.TrialId == request.TrialId);
             if (existingMetadata == null)
-            {
-                request.AdjustEndDate();
+            { 
                 dbContext.Add(request);
             }
             else

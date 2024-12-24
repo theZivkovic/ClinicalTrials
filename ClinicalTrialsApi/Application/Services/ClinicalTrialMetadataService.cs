@@ -64,9 +64,13 @@ namespace ClinicalTrialsApi.Application.Services
                         PropertyNameCaseInsensitive = true
                     });
 
-                    return clinicalTrialMetadata == null
-                        ? throw new JsonException("Problem deserializing the result")
-                        : clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
+                    if (clinicalTrialMetadata == null)
+                    {
+                        throw new JsonException("Problem deserializing the result");
+                    }
+
+                    clinicalTrialMetadata.AdjustEndDate();
+                    return clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
                 });
             }, () => ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"ValidationSchema for type: {ValidationSchemaType.ClinicalTrial} not found"));
         }

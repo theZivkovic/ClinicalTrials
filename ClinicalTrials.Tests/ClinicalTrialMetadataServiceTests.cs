@@ -8,6 +8,7 @@ using LanguageExt;
 using LanguageExt.UnitTesting;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Globalization;
 using System.Text.Json;
 
 namespace ClinicalTrials.Tests
@@ -85,9 +86,9 @@ namespace ClinicalTrials.Tests
         public async Task CreateOrUpdateATrial_Should_Not_Allow_Non_Json_Files(string filename)
         {
             var file = FormFileHelper.CreateMockFile(filename, @"{
-                ""trialId"": ""trial-2"",
-                ""title"": ""Second trial"",
-                ""startDate"": ""2016-06-03T23:15:33.008Z"",
+                ""trialId"": ""trial-x"",
+                ""title"": ""Test trial"",
+                ""startDate"": ""2024-06-03T10:15:33.008Z"",
                 ""participants"": 1,
                 ""status"":""Completed""
             }");
@@ -105,7 +106,7 @@ namespace ClinicalTrials.Tests
             var file = FormFileHelper.CreateMockFile("test.json", $@"{{
                 ""trialId"": ""{string.Join("", Enumerable.Range(0, 100))}"",
                 ""title"": ""{string.Join("", Enumerable.Range(0, 300))}"",
-                ""startDate"": ""2016-06-03T23:15:33.008Z"",
+                ""startDate"": ""2024-06-03T10:15:33.008Z"",
                 ""participants"": 1,
                 ""status"":""Completed""
             }}");
@@ -125,9 +126,9 @@ namespace ClinicalTrials.Tests
                 .ReturnsAsync(Option<ValidationSchema>.None);
 
             var file = FormFileHelper.CreateMockFile("test.json", @"{
-                ""trialId"": ""trial-2"",
-                ""title"": ""Second trial"",
-                ""startDate"": ""2016-06-03T23:15:33.008Z"",
+                ""trialId"": ""trial-x"",
+                ""title"": ""Test trial"",
+                ""startDate"": ""2024-06-03T10:15:33.008Z"",
                 ""participants"": 1,
                 ""status"":""Completed""
             }");
@@ -140,21 +141,21 @@ namespace ClinicalTrials.Tests
         }
 
         [TestCase(@"{
-                ""title"": ""Second trial"",
-                ""startDate"": ""2016-06-03T23:15:33.008Z"",
+                ""title"": ""Test trial"",
+                ""startDate"": ""2024-06-03T10:15:33.008Z"",
                 ""participants"": 1,
                 ""status"":""Completed""
             }", "")]
         [TestCase(@"{
-                ""trialId"": ""trial-2"",
-                ""title"": ""Second trial"",
+                ""trialId"": ""trial-x"",
+                ""title"": ""Test trial"",
                 ""startDate"": ""2022-AA-BB"",
                 ""participants"": 1,
                 ""status"":""Completed""
             }", "startDate")]
         [TestCase(@"{
-                ""trialId"": ""trial-2"",
-                ""title"": ""Second trial"",
+                ""trialId"": ""trial-x"",
+                ""title"": ""Test trial"",
                 ""startDate"": ""2022-12-12"",
                 ""participants"": 1,
                 ""status"":""SOME STATUS""
@@ -168,6 +169,45 @@ namespace ClinicalTrials.Tests
             result.Error.ShouldBeSome(x => Assert.That(x.Status, Is.EqualTo(400)));
             result.Error.ShouldBeSome(x => Assert.That(x.Title, Is.EqualTo("Validation Error")));
             result.Error.ShouldBeSome(x => Assert.That(x.Extensions["errors"], Contains.Key(corruptedFieldName)));
+        }
+
+        [Test]
+        public async Task CreateOrUpdateATrial_Should_Properly_Deserialize_Correct_Input()
+        {
+            var file = FormFileHelper.CreateMockFile("test.json", @"{
+                ""trialId"": ""trial-x"",
+                ""title"": ""Test trial"",
+                ""startDate"": ""2024-06-03T10:15:33.008Z"",
+                ""endDate"": ""2025-06-03T10:15:33.008Z"",
+                ""participants"": 1,
+                ""status"":""Completed""
+            }");
+
+            var result = await service.CreateOrUpdateATrial(file);
+            Assert.That(result.IsError, Is.False);
+            result.Entity.ShouldBeSome(x => Assert.That(x.TrialId, Is.EqualTo("trial-x")));
+            result.Entity.ShouldBeSome(x => Assert.That(x.Title, Is.EqualTo("Test trial")));
+            result.Entity.ShouldBeSome(x => Assert.That(x.StartDate.ToString(CultureInfo.InvariantCulture), Is.EqualTo("06/03/2024 10:15:33")));
+            result.Entity.ShouldBeSome(x => Assert.That(x.EndDate?.ToString(CultureInfo.InvariantCulture), Is.EqualTo("06/03/2025 10:15:33")));
+            result.Entity.ShouldBeSome(x => Assert.That(x.Participants, Is.EqualTo(1)));
+            result.Entity.ShouldBeSome(x => Assert.That(x.Status, Is.EqualTo(ClinicalTrialStatus.Completed)));
+        }
+
+        [Test]
+        public async Task CreateOrUpdateATrial_Should_Set_The_EndDate_To_One_Month_After_StartDate_If_Not_Provided()
+        {
+            var file = FormFileHelper.CreateMockFile("test.json", @"{
+                ""trialId"": ""trial-x"",
+                ""title"": ""Test trial"",
+                ""startDate"": ""2024-06-03T10:15:33.008Z"",
+                ""participants"": 1,
+                ""status"":""Completed""
+            }");
+
+            var result = await service.CreateOrUpdateATrial(file);
+            Assert.That(result.IsError, Is.False);
+            result.Entity.ShouldBeSome(x => Assert.That(x.EndDate?.ToString(CultureInfo.InvariantCulture), Is.EqualTo("07/03/2024 10:15:33")));
+            result.Entity.ShouldBeSome(x => Assert.That(x.Status, Is.EqualTo(ClinicalTrialStatus.Ongoing)));
         }
     }
 }
