@@ -42,31 +42,33 @@ namespace ClinicalTrialsApi.Application.Services
 
             var validationSchema = await validationSchemaRepository.Get(ValidationSchemaType.ClinicalTrial);
 
-            if (validationSchema.IsNone)
+            return await validationSchema.MatchAsync(async validationSchema =>
             {
-                return ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"ValidationSchema for type: {ValidationSchemaType.ClinicalTrial} not found");
-            }
+                var schema = JsonSchema.FromText(validationSchema.Schema.ToString());
 
-            var schema = JsonSchema.FromText(validationSchema.ValueUnsafe().Schema.ToString());
-            var validationResult = schema.Evaluate(inputJson);
-
-            if (!validationResult.IsValid)
-            {
-                return ServiceResultFactory.CreateValiationErrors<ClinicalTrialMetadata>(validationResult);
-            }
-
-            return await unitOfWork.Execute(() =>
-            {
-                var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, new JsonSerializerOptions
+                var validationResult = schema.Evaluate(inputJson, new EvaluationOptions
                 {
-                    PropertyNameCaseInsensitive = true
+                    RequireFormatValidation = true,
+                    OutputFormat = OutputFormat.List
                 });
 
-                return clinicalTrialMetadata == null
-                    ? throw new JsonException("Problem deserializing the result")
-                    : clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
-            });
+                if (!validationResult.IsValid)
+                {
+                    return ServiceResultFactory.CreateValiationErrors<ClinicalTrialMetadata>(validationResult);
+                }
 
+                return await unitOfWork.Execute(() =>
+                {
+                    var clinicalTrialMetadata = JsonSerializer.Deserialize<ClinicalTrialMetadata>(inputJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return clinicalTrialMetadata == null
+                        ? throw new JsonException("Problem deserializing the result")
+                        : clinicalTrialMetadataRepository.CreateOrUpdate(clinicalTrialMetadata);
+                });
+            }, () => ServiceResultFactory.CreateNotFound<ClinicalTrialMetadata>($"ValidationSchema for type: {ValidationSchemaType.ClinicalTrial} not found"));
         }
 
         public async Task<ServiceResult<IEnumerable<ClinicalTrialMetadata>>> GetAllTrials(ClinicalTrialMetadataFilter filter, Pagination pagination)

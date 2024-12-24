@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ClinicalTrialsApi;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
@@ -7,7 +8,7 @@ using System.Data;
 
 namespace ClinicalTrials.Tests.MockModels
 {
-    public class MockClinicalTrialsContext: Mock<DbContext>
+    public class MockClinicalTrialsContext: Mock<ClinicalTrialsContext>
     {
         public MockClinicalTrialsContext()
         {
@@ -15,9 +16,9 @@ namespace ClinicalTrials.Tests.MockModels
         }
     }
 
-    public class MockDatabaseFacade: Mock<DatabaseFacade>
+    public class MockDatabaseFacade : Mock<DatabaseFacade>
     {
-        public MockDatabaseFacade(DbContext context): base(context)
+        public MockDatabaseFacade(DbContext context) : base(context)
         {
             Setup(x => x.BeginTransaction()).Returns(new MockTransaction().Object);
         }

@@ -5,6 +5,8 @@ namespace ClinicalTrialsApi
 {
     public class ClinicalTrialsContext : DbContext
     {
+        public ClinicalTrialsContext() { }
+
         public DbSet<ClinicalTrialMetadata> ClinicalTrialMetadatas { get; set; }
         public DbSet<ValidationSchema> ValidationSchemas { get; set; }
 

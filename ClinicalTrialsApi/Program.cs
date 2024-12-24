@@ -1,5 +1,4 @@
 using ClinicalTrialsApi;
-using ClinicalTrialsApi.Application;
 using ClinicalTrialsApi.Application.Services;
 using ClinicalTrialsApi.Core.Interfaces;
 using ClinicalTrialsApi.Core.Models;

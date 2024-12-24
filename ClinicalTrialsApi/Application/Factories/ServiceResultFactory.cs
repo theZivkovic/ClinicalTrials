@@ -42,12 +42,27 @@ namespace ClinicalTrialsApi.Application.Factories
         {
             return ServiceResult<T>.FromError(new ProblemDetails
             {
-                Detail = "Validation error",
+                Detail = "Validation Error",
                 Instance = "api",
                 Status = (int)HttpStatusCode.BadRequest,
-                Title = "Validation error",
-                //Extensions = evaluationResults.Errors!.ToDictionary(x => x.Key, x => (object?)x.Value)
+                Title = "Validation Error",
+                Extensions = CreateValidationErrorDetails(evaluationResults)
             });
+        }
+
+        private static Dictionary<string, object?> CreateValidationErrorDetails(EvaluationResults results)
+        {
+            var errorsDictionary = results
+                .Details
+                .Where(x => x.Errors != null)
+                .ToDictionary(
+                    x => x.EvaluationPath.ToString().Split('/').Last(), 
+                    x => x.Errors?.Values);
+
+            return new Dictionary<string, object?>
+            {
+                { "errors", errorsDictionary }
+            };
         }
     }
 }
