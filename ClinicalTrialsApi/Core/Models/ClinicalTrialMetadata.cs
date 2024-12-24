@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
@@ -30,6 +31,24 @@ namespace ClinicalTrialsApi.Core.Models
         public int Participants { get; set; }
         [Required]
         public ClinicalTrialStatus Status { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public int DurationInDays
+        {
+            get {
+                if (EndDate == null) throw new NullReferenceException(" EndDate must be set in order calculated DurationInDays,");
+                return (int)(EndDate.Value - StartDate).TotalDays; }
+            private set {  }
+        }
+
+        public void AdjustEndDate()
+        {
+            if (EndDate == null)
+            {
+                EndDate = StartDate.AddMonths(1);
+                Status = ClinicalTrialStatus.Ongoing;
+            }
+        }
 
     }
 }

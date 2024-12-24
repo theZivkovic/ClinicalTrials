@@ -6,6 +6,9 @@ services:
     build:
       context: .
       dockerfile: ClinicalTrialsApi/Dockerfile
+    depends_on:
+      clinicaltrialsdb:
+        condition: service_started
   clinicaltrialsdb:
     image: postgres:17
     restart: always
@@ -22,9 +25,8 @@ services:
       context: .
       dockerfile: Migrations/Dockerfile
     depends_on:
-      clinicaltrialsapi:
+      clinicaltrialsdb:
         condition: service_started
-
 volumes:
   db:
     driver: local
